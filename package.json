@@ -1,0 +1,12 @@
+{
+  "name": "card-wars-server",
+  "version": "1.0.0",
+  "description": "Custom Server for Card Wars",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
