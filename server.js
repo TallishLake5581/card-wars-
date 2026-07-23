@@ -27,10 +27,8 @@ app.get('/api/user/profile', (req, res) => {
 app.post('/api/user/login', (req, res) => {
     res.json(userData);
 });
-
-// مسار احتياطي عام
-app.get('/', (req, res) => {
-    res.send('Server is running!');
+app.all('/api/v1/*', (req, res) => {
+    res.status(200).send('OK');
 });
 
 // تشغيل السيرفر
