@@ -1,0 +1,16 @@
+{
+  "user_id": "player_001",
+  "display_name": "Marwan",
+  "level": 1,
+  "experience": 0,
+  "coins": 1000,
+  "gems": 50,
+  "energy": 20,
+  "max_energy": 20,
+  "inventory": {
+    "cards": [
+      { "card_id": "card_01", "quantity": 1 },
+      { "card_id": "card_02", "quantity": 1 }
+    ]
+  }
+}
