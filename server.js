@@ -23,13 +23,14 @@ app.get('/api/config', (req, res) => {
 app.get('/api/user/profile', (req, res) => {
     res.json(userData);
 });
-
-app.post('/api/user/login', (req, res) => {
-    res.json(userData);
-});
 app.all('/api/v1/*', (req, res) => {
     res.status(200).send('OK');
 });
+
+app.all('/api/v0/ping*', (req, res) => {
+    res.status(200).send('OK');
+});
+
 
 // تشغيل السيرفر
 const PORT = process.env.PORT || 3000;
