@@ -1,39 +1,41 @@
 const express = require('express');
-const path = require('path');
 const app = express();
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// استدعاء ملفات الـ JSON
-const configData = require('./config.json');
-const userData = require('./user.json');
-
-// لمعرفة أي مسار تطلبه اللعبة
-app.use((req, res, next) => {
-    console.log(`[Request] ${req.method} ${req.url}`);
-    next();
+// 1. نقطة التحقق أو الصفحة الرئيسية للسيرفر
+app.get('/', (req, res) => {
+    res.send('Card Wars Server is Online! 🚀');
 });
 
-// مسار الإعدادات
-app.get('/api/config', (req, res) => {
-    res.json(configData);
+// 2. مسار ملفات الإعدادات (server_settings.json) إذا طلبته اللعبة مباشرة من السيرفر
+app.get('/server_settings.json', (req, res) => {
+    res.json({
+        "type": "server_settings",
+        "cdn_url": "https://card-wars-1.onrender.com/persist/static/",
+        "manifest_file_url": "https://card-wars-1.onrender.com/persist/static/manifest.json",
+        "server_url": "https://card-wars-1.onrender.com/"
+    });
 });
 
-// مسارات بيانات اللاعب والتسجيل
-app.get('/api/user/profile', (req, res) => {
-    res.json(userData);
-});
-app.all('/api/v1/*', (req, res) => {
-    res.status(200).send('OK');
-});
-
-app.all('/api/v0/ping*', (req, res) => {
-    res.status(200).send('OK');
+// 3. مسار الـ Manifest الثابت (لتفادي الشاشة السوداء)
+app.get('/persist/static/manifest.json', (req, res) => {
+    res.json({
+        "version": "1.0.0",
+        "assets": []
+    });
 });
 
+// 4. مسار الحلبة أو بيانات اللعب (Deck Wars / PvP endpoints المتوقعة)
+app.get('/api/deckwars', (req, res) => {
+    res.json({
+        "status": "success",
+        "message": "Deck Wars is open!",
+        "leaderboard": []
+    });
+});
 
-// تشغيل السيرفر
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Card Wars Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
