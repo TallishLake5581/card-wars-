@@ -1,4 +1,5 @@
 const express = require('express');
+const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -9,7 +10,18 @@ app.get('/', (req, res) => {
     res.send('Card Wars Server is Online! 🚀');
 });
 
-// 2. إعدادات السيرفر الأساسية للعبة
+// 2. قراءة ملف config.json الموجود في المستودع وإرساله للعبة
+app.get('/config.json', (req, res) => {
+    try {
+        const configData = fs.readFileSync('./config.json', 'utf8');
+        res.setHeader('Content-Type', 'application/json');
+        res.send(configData);
+    } catch (err) {
+        res.status(404).json({ error: "Config not found" });
+    }
+});
+
+// 3. إعدادات السيرفر الأساسية للعبة
 app.get('/server_settings.json', (req, res) => {
     res.json({
         "type": "server_settings",
@@ -19,7 +31,7 @@ app.get('/server_settings.json', (req, res) => {
     });
 });
 
-// 3. ملف الـ Manifest بصيغة JSON صحيحة ومتكاملة لتفادي الشاشة السوداء
+// 4. ملف الـ Manifest بصيغة JSON
 app.get('/persist/static/manifest.json', (req, res) => {
     res.json({
         "status": "success",
@@ -28,7 +40,7 @@ app.get('/persist/static/manifest.json', (req, res) => {
     });
 });
 
-// 4. مسار الـ CDN والملفات الثابتة
+// 5. مسار الـ CDN والملفات الثابتة
 app.get('/persist/static/*', (req, res) => {
     res.status(200).json({
         "status": "success",
@@ -36,7 +48,7 @@ app.get('/persist/static/*', (req, res) => {
     });
 });
 
-// 5. مسار بيانات اللعبة والحلبة
+// 6. مسار بيانات اللعبة والحلبة
 app.get('/api/deckwars', (req, res) => {
     res.json({
         "status": "success",
