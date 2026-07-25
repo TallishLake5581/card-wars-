@@ -1,62 +1,39 @@
 const express = require('express');
-const fs = require('fs');
+const path = require('path');
 const app = express();
-const PORT = process.env.PORT || 3000;
 
+// Handle incoming request bodies
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.raw({ type: '*/*' }));
 
-// 1. الصفحة الرئيسية للسيرفر
+const PORT = process.env.PORT || 10000;
+
+// Log all incoming requests
+app.use((req, res, next) => {
+    console.log(`[+] Incoming Request: ${req.method} ${req.url}`);
+    next();
+});
+
+// 1. Health check route
 app.get('/', (req, res) => {
-    res.send('Card Wars Server is Online! 🚀');
+    res.status(200).send('Card Wars Private Server is Active!');
 });
 
-// 2. قراءة ملف config.json الموجود في المستودع وإرساله للعبة
-app.get('/config.json', (req, res) => {
-    try {
-        const configData = fs.readFileSync('./config.json', 'utf8');
-        res.setHeader('Content-Type', 'application/json');
-        res.send(configData);
-    } catch (err) {
-        res.status(404).json({ error: "Config not found" });
-    }
-});
+// 2. Serve static files from persist folder (including manifest.json)
+app.use('/persist', express.static(path.join(__dirname, 'persist')));
 
-// 3. إعدادات السيرفر الأساسية للعبة
-app.get('/server_settings.json', (req, res) => {
-    res.json({
-        "type": "server_settings",
-        "cdn_url": "http://card-wars-1.onrender.com/persist/static/",
-        "manifest_file_url": "http://card-wars-1.onrender.com/persist/static/manifest.json",
-        "server_url": "http://card-wars-1.onrender.com/"
-    });
-});
-
-// 4. ملف الـ Manifest بصيغة JSON
-app.get('/persist/static/manifest.json', (req, res) => {
-    res.json({
-        "status": "success",
-        "version": "1.11.0",
-        "files": []
-    });
-});
-
-// 5. مسار الـ CDN والملفات الثابتة
-app.get('/persist/static/*', (req, res) => {
+// 3. Fallback response for all other API requests
+app.all('*', (req, res) => {
+    console.log(`[*] API Request received on: ${req.url}`);
     res.status(200).json({
-        "status": "success",
-        "message": "Asset loaded"
-    });
-});
-
-// 6. مسار بيانات اللعبة والحلبة
-app.get('/api/deckwars', (req, res) => {
-    res.json({
-        "status": "success",
-        "message": "Deck Wars is open!",
-        "leaderboard": []
+        status: "success",
+        code: 200,
+        message: "OK",
+        data: {}
     });
 });
 
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`[*] Server is running on port ${PORT}`);
 });
