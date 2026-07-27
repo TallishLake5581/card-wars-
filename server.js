@@ -3,43 +3,59 @@ const path = require('path');
 const fs = require('fs');
 const app = express();
 
-// إعدادات أساسية لضمان قبول البيانات
+// السماح بقواعد البيانات والـ Headers الخاصة باللعبة
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 1. مسار خدعة الـ Manifest: لإعطاء اللعبة محتوى الملفات والنسخة مباشرة
-app.get('/persist/static/manifest.json', (req, res) => {
-    const manifestData = {
-        "version": 51, 
-        "contents": []
-    };
-    res.status(200).json(manifestData);
+// التعامل مع الـ Headers والاتصالات
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', '*');
+    next();
 });
 
-// 2. المسار الديناميكي الآمن لقراءة أي ملف من مجلد Blueprints دون انقطاع الاتصال
+// 1. مسارات الـ Manifest (بكل الأشكال المحتملة التي قد تطلبها اللعبة)
+app.get('/manifest.json', (req, res) => {
+    res.status(200).json({
+        "version": 51,
+        "contents": []
+    });
+});
+
+app.get('/persist/static/manifest.json', (req, res) => {
+    res.status(200).json({
+        "version": 51,
+        "contents": []
+    });
+});
+
+// 2. مسار التحليلات الوهمي لتجنب أخطاء 404
+app.get('/api/v1/:appId/pgr/', (req, res) => {
+    res.status(200).send("OK");
+});
+
+// 3. قراءة ملفات الـ Blueprints ديناميكياً
 app.get('/Blueprints/:filename', (req, res) => {
     const filename = req.params.filename;
     const filePath = path.join(__dirname, 'Blueprints', filename);
 
     fs.readFile(filePath, 'utf8', (err, data) => {
         if (err) {
-            console.log(`الملف غير موجود في Blueprints: ${filename}`);
             return res.status(200).json({});
         }
-        
         try {
             const jsonData = JSON.parse(data);
             res.setHeader('Content-Type', 'application/json');
             res.status(200).json(jsonData);
         } catch (parseError) {
-            console.log(`خطأ في قراءة JSON لملف: ${filename}`);
             res.status(500).send("Invalid JSON format");
         }
     });
 });
 
-// تشغيل السيرفر
+// تشغيل السيرفر على البورت المطلوب من المنصة
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running securely on port ${PORT}`);
 });
