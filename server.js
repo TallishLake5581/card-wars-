@@ -24,8 +24,9 @@ const server = http.createServer((req, res) => {
     res.end();
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`السيرفر يعمل بنجاح على البورت ${PORT}`);
 });
+
 
