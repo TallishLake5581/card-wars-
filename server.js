@@ -24,7 +24,7 @@ const server = http.createServer((req, res) => {
     res.end();
 });
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || process.env.WEBSITES_PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
