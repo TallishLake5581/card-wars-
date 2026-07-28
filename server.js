@@ -1,61 +1,62 @@
-const express = require('express');
-const path = require('path');
+const tls = require('tls');
 const fs = require('fs');
-const app = express();
+const path = require('path');
 
-// السماح بقواعد البيانات والـ Headers الخاصة باللعبة
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// البورت الذي تستخدمه المنصة للاتصالات الخام
+const PORT = process.env.PORT || 443;
 
-// التعامل مع الـ Headers والاتصالات
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', '*');
-    next();
-});
+const server = tls.createServer((socket) => {
+    console.log('تم استقبال اتصال TLS TCP خام من اللعبة بنجاح!');
 
-// 1. مسارات الـ Manifest (بكل الأشكال المحتملة التي قد تطلبها اللعبة)
-app.get('/manifest.json', (req, res) => {
-    res.status(200).json({
-        "version": 51,
-        "contents": []
-    });
-});
+    socket.on('data', (data) => {
+        const requestString = data.toString();
+        console.log('البيانات المستلمة:', requestString.slice(0, 100));
 
-app.get('/persist/static/manifest.json', (req, res) => {
-    res.status(200).json({
-        "version": 51,
-        "contents": []
-    });
-});
+        // التحقق مما إذا كانت اللعبة تطلب ملف الـ manifest أو أصول الـ CDN
+        if (requestString.includes('manifest.json')) {
+            try {
+                const manifestPath = path.join(__dirname, 'manifest.json');
+                const manifestData = fs.readFileSync(manifestPath, 'utf8');
+                
+                // الرد ببروتوكول HTTP فوق اتصال الـ TLS الخام
+                const response = `HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ${Buffer.byteLength(manifestData)}\r\n\r\n${manifestData}`;
+                socket.write(response);
+            } catch (err) {
+                console.error('خطأ في قراءة ملف الـ manifest:', err);
+            }
+        } else {
+            // محاولة جلب أي ملف آخر يطلبه الـ CDN بناءً على المسار
+            try {
+                // استخراج اسم الملف المطلوب من الطلب إذا وجد
+                const match = requestString.match(/GET\s+\/([^\s]+)\s+HTTP/);
+                if (match && match[1]) {
+                    const filePath = path.join(__dirname, match[1]);
+                    if (fs.existsSync(filePath)) {
+                        const fileData = fs.readFileSync(filePath);
+                        const response = `HTTP/1.1 200 OK\r\nContent-Length: ${fileData.length}\r\n\r\n`;
+                        socket.write(response);
+                        socket.write(fileData);
+                        return;
+                    }
+                }
+            } catch (e) {
+                // تجاهل الأخطاء البسيطة في استخراج المسار
+            }
 
-// 2. مسار التحليلات الوهمي لتجنب أخطاء 404
-app.get('/api/v1/:appId/pgr/', (req, res) => {
-    res.status(200).send("OK");
-});
-
-// 3. قراءة ملفات الـ Blueprints ديناميكياً
-app.get('/Blueprints/:filename', (req, res) => {
-    const filename = req.params.filename;
-    const filePath = path.join(__dirname, 'Blueprints', filename);
-
-    fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            return res.status(200).json({});
-        }
-        try {
-            const jsonData = JSON.parse(data);
-            res.setHeader('Content-Type', 'application/json');
-            res.status(200).json(jsonData);
-        } catch (parseError) {
-            res.status(500).send("Invalid JSON format");
+            // استجابة افتراضية لإبقاء الاتصال مستقراً وثابتاً
+            socket.write('HTTP/1.1 200 OK\r\n\r\n');
         }
     });
+
+    socket.on('error', (err) => {
+        console.error('خطأ في السوكيت:', err);
+    });
+
+    socket.on('end', () => {
+        console.log('تم قطع الاتصال من قبل اللعبة.');
+    });
 });
 
-// تشغيل السيرفر على البورت المطلوب من المنصة
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running securely on port ${PORT}`);
+server.listen(PORT, () => {
+    console.log(`سيرفر TLS TCP الخام يعمل بكفاءة على البورت: ${PORT}`);
 });
