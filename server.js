@@ -5,6 +5,13 @@ const server = http.createServer((req, res) => {
     const parsedUrl = url.parse(req.url, true);
     console.log(`تم استلام طلب للرابط: ${parsedUrl.pathname}`);
     
+    // الرد الفوري على فحص الصحة أو الصفحة الرئيسية لكي لا تغلق المنصة السيرفر
+    if (parsedUrl.pathname === '/' || parsedUrl.pathname === '/health') {
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.end('Server is active and running!');
+        return;
+    }
+    
     if (parsedUrl.pathname.includes('manifest.json')) {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
@@ -28,4 +35,3 @@ const PORT = process.env.PORT || process.env.PORT_HTTP || 8080;
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
 });
-
