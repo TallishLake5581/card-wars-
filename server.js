@@ -1,10 +1,11 @@
 const http = require('http');
+const url = require('url');
 
 const server = http.createServer((req, res) => {
-    console.log(`تم استلام طلب للرابط: ${req.url}`);
+    const parsedUrl = url.parse(req.url, true);
+    console.log(`تم استلام طلب للرابط: ${parsedUrl.pathname}`);
     
-    // الرد على ملف الـ manifest
-    if (req.url.includes('manifest.json')) {
+    if (parsedUrl.pathname.includes('manifest.json')) {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
             version: "1.0.0",
@@ -13,9 +14,14 @@ const server = http.createServer((req, res) => {
         return;
     }
     
-    // الرد على أي طلب آخر يخص الـ CDN أو الاتصال العام
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Server & CDN is active!');
+    if (parsedUrl.pathname.endsWith('.json') || parsedUrl.pathname.includes('config') || parsedUrl.pathname.includes('data')) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({}));
+        return;
+    }
+    
+    res.writeHead(200, { 'Content-Type': 'application/octet-stream' });
+    res.end();
 });
 
 const PORT = process.env.PORT || 8080;
