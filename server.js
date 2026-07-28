@@ -24,9 +24,8 @@ const server = http.createServer((req, res) => {
     res.end();
 });
 
-const PORT = process.env.PORT;
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`السيرفر يعمل بنجاح على البورت ${PORT}`);
+const PORT = process.env.PORT || 8080;
+server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
-
 
