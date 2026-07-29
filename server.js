@@ -1,39 +1,23 @@
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
-const url = require('url');
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-const server = http.createServer((req, res) => {
-    const parsedUrl = url.parse(req.url, true);
-    let pathname = decodeURIComponent(parsedUrl.pathname);
+app.use(express.json());
 
-    // الرد على فحص الصحة لتبقى الحاوية مستقرة في Railway
-    if (pathname === '/' || pathname === '/health' || pathname === '/ping') {
-        res.writeHead(200, { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*' });
-        res.end('OK');
-        return;
-    }
+// نقطة البداية أو التحقق من الاتصال
+app.get('/', (req, res) => {
+    res.status(200).send('Card Wars Server is Online!');
+});
 
-    // مطابقة المسار الحقيقي الذي أنشأته في المستودع (persist/static/...)
-    let filePath = path.join(__dirname, pathname);
-
-    fs.readFile(filePath, (err, data) => {
-        if (!err) {
-            let ext = path.extname(filePath).toLowerCase();
-            let contentType = 'application/octet-stream';
-            if (ext === '.json') contentType = 'application/json';
-            else if (ext === '.xml') contentType = 'application/xml';
-            
-            res.writeHead(200, { 'Content-Type': contentType, 'Access-Control-Allow-Origin': '*' });
-            res.end(data);
-        } else {
-            res.writeHead(404, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-            res.end(JSON.stringify({ error: "File or route not found in repository", path: pathname }));
-        }
+// استقبال طلبات اللعبة (يمكنك إضافة الـ Routes الخاصة بالتشكيلات والبطولات هنا)
+app.all('*', (req, res) => {
+    console.log(`Received ${req.method} request to ${req.url}`);
+    res.status(200).json({
+        status: "success",
+        message: "Connected to Marwan's custom server successfully!"
     });
 });
 
-const PORT = process.env.PORT || 8080;
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Repo-Mapped Server running on port ${PORT}`);
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
