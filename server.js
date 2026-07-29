@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 app.use(express.json());
 
@@ -9,7 +9,7 @@ app.get('/', (req, res) => {
     res.status(200).send('Card Wars Server is Online!');
 });
 
-// استقبال طلبات اللعبة (يمكنك إضافة الـ Routes الخاصة بالتشكيلات والبطولات هنا)
+// استقبال طلبات اللعبة عبر جميع المسارات
 app.all('*', (req, res) => {
     console.log(`Received ${req.method} request to ${req.url}`);
     res.status(200).json({
