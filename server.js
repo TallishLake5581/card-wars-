@@ -1,20 +1,21 @@
 const express = require('express');
+const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.use(express.json());
 
-// نقطة البداية أو التحقق من الاتصال
+// نقطة البداية القديمة (عشان ما نخرب شي) //
 app.get('/', (req, res) => {
-    res.status(200).send('Card Wars Server is Online!');
+    res.status(200).send('Card Wars Server is active!');
 });
 
-// استقبال طلبات اللعبة عبر جميع المسارات
-app.all('*', (req, res) => {
-    console.log(`Received ${req.method} request to ${req.url}`);
+// استقبال طلبات اللعبة القديمة //
+app.all('/api/*', (req, res) => {
+    console.log(`Received ${req.method} request`);
     res.status(200).json({
         status: "success",
-        message: "Connected to Marwan's custom server successfully!"
+        message: "Connected to server successfully"
     });
 });
 
