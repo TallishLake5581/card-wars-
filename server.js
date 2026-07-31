@@ -3,22 +3,9 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-app.use(express.json());
-
-// نقطة البداية القديمة (عشان ما نخرب شي) //
-app.get('/', (req, res) => {
-    res.status(200).send('Card Wars Server is active!');
-});
-
-// استقبال طلبات اللعبة القديمة //
-app.all('/api/*', (req, res) => {
-    console.log(`Received ${req.method} request`);
-    res.status(200).json({
-        status: "success",
-        message: "Connected to server successfully"
-    });
-});
+// قراءة ملفات الويب الخاصة باللعبة مباشرة
+app.use(express.static(path.join(__dirname, 'card_wars', 'web')));
 
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Card Wars game server is running on port ${PORT}`);
 });
